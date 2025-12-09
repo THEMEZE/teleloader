@@ -243,6 +243,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install flask
 pip install python-dotenv
+pip install -r requirements.txt
 python -c "import flask; print(flask.__version__)"
 python3 server.py
 ```
@@ -267,7 +268,9 @@ Crée un fichier : `index.html`
 # Bot 
 
 ```bash
+python3.12 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
 python bot.py
 ```
 
