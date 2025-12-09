@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>🎵 Mini Media Player 🎬</title>
+  <link rel="icon" type="image/png" href="favicon-32x32.png" />
+  <link rel="icon" type="image/png" href="favicon-16x16.png" />
+  <link
+    rel="icon"
+    href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="0.9em" font-size="90">🎬</text></svg>'
+  >
+  <script>
+  const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+  favicon.rel = 'icon';
+  favicon.href = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="0.9em" font-size="90">🎬</text></svg>';
+  document.head.appendChild(favicon);
+  </script>
+
+
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    video, audio {
+      width: 90%;
+      margin: 10px auto;
+      background: #000;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    .controls button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+    input[type="range"] {
+      width: 80%;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎵 Mini Media Player 🎬</h1>
+
+  <input type="file" id="fileInput" accept=".mp3,.ogg,.wav,.mp4,.webm,.mov,.mkv" />
+
+  <br><br>
+
+  <video id="videoPlayer" controls hidden></video>
+  <audio id="audioPlayer" controls hidden></audio>
+
+  <div class="controls">
+    <button onclick="play()">▶️ Play</button>
+    <button onclick="pause()">⏸️ Pause</button>
+    <button onclick="seek(-5)">⏪ -5s</button>
+    <button onclick="seek(5)">⏩ +5s</button>
+    <button onclick="setSpeed(1)">⏩ x1</button>
+    <button onclick="setSpeed(2)">⏩ x2</button>
+    <br>
+    <input type="range" id="progressBar" value="0" min="0" max="100" step="0.1" />
+    <div id="timeLabel">00:00 / 00:00</div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const video = document.getElementById("videoPlayer");
+    const audio = document.getElementById("audioPlayer");
+    const progressBar = document.getElementById("progressBar");
+    const timeLabel = document.getElementById("timeLabel");
+
+    let currentMedia = null;
+
+    fileInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      if (/\.(mp4|webm|mov|mkv)$/i.test(file.name)) {
+        // Vidéo
+        audio.hidden = true;
+        audio.pause();
+        video.hidden = false;
+        video.src = url;
+        currentMedia = video;
+      } else if (/\.(mp3|ogg|wav)$/i.test(file.name)) {
+        // Audio
+        video.hidden = true;
+        video.pause();
+        audio.hidden = false;
+        audio.src = url;
+        currentMedia = audio;
+      }
+
+      currentMedia.addEventListener("timeupdate", updateProgress);
+      currentMedia.addEventListener("loadedmetadata", updateProgress);
+    });
+
+    function play() {
+      if (currentMedia) currentMedia.play();
+    }
+
+    function pause() {
+      if (currentMedia) currentMedia.pause();
+    }
+
+    function seek(seconds) {
+      if (currentMedia) currentMedia.currentTime += seconds;
+    }
+
+    function setSpeed(speed) {
+      if (currentMedia) currentMedia.playbackRate = speed;
+    }
+
+    progressBar.addEventListener("input", function () {
+      if (currentMedia && currentMedia.duration) {
+        currentMedia.currentTime = currentMedia.duration * (this.value / 100);
+      }
+    });
+
+    function updateProgress() {
+      if (!currentMedia || !currentMedia.duration) return;
+
+      const percent = (currentMedia.currentTime / currentMedia.duration) * 100;
+      progressBar.value = percent;
+
+      timeLabel.textContent = `${formatTime(currentMedia.currentTime)} / ${formatTime(currentMedia.duration)}`;
+    }
+
+    function formatTime(time) {
+      const minutes = Math.floor(time / 60).toString().padStart(2, '0');
+      const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+  </script>
+
+</body>
+</html>
+

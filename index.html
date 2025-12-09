@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>📁 Portfolio – Downloads</title>
+
+    <!-- Favicon emoji dynamique -->
+    <link
+      id="favicon"
+      rel="icon"
+      href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="0.9em" font-size="90">📁</text></svg>'
+    />
+
+    <!-- PDF.js (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+
+    <style>
+      :root {
+        --bg: #f5f5f5;
+        --text: #111;
+        --card-bg: #ffffff;
+        --shadow: rgba(0, 0, 0, 0.1);
+        --accent: #3b82f6;
+      }
+
+      body.dark {
+        --bg: #111827;
+        --text: #f9fafb;
+        --card-bg: #1f2937;
+        --shadow: rgba(0, 0, 0, 0.6);
+        --accent: #60a5fa;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        padding: 20px;
+        border-right: 1px solid rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+      }
+
+      .sidebar h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+      }
+
+      .main {
+        padding: 20px;
+      }
+
+      h1 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+      }
+
+      .item {
+        position: relative;
+        cursor: pointer;
+        overflow: hidden;
+        border-radius: 16px;
+        background: var(--card-bg);
+        box-shadow: 0 4px 12px var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px var(--shadow);
+      }
+
+      .item img,
+      .item video {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .item-label {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+      }
+
+      /* Viewer plein écran */
+      #viewer {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      #viewerContent {
+        max-width: 90vw;
+        max-height: 90vh;
+        background: #000;
+        border-radius: 16px;
+        padding: 10px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .viewer-main {
+        max-width: 100%;
+        max-height: 75vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #viewerContent img,
+      #viewerContent video {
+        max-width: 100%;
+        max-height: 70vh;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .viewer-controls {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #f9fafb;
+        font-size: 0.9rem;
+      }
+
+      .viewer-controls button {
+        padding: 4px 10px;
+        border: none;
+        border-radius: 999px;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+
+      .viewer-controls button:hover {
+        opacity: 0.9;
+      }
+
+      .viewer-progress {
+        flex: 1;
+      }
+
+      .viewer-progress input[type="range"] {
+        width: 100%;
+      }
+
+      /* Sidebar controls */
+      .control-group {
+        margin-bottom: 20px;
+      }
+
+      .control-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+
+      select,
+      button.toggle {
+        width: 100%;
+        padding: 6px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: var(--card-bg);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      button.toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .chip {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.8rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: var(--card-bg);
+        cursor: pointer;
+        opacity: 0.85;
+      }
+
+      .chip.active {
+        background: var(--accent);
+        color: white;
+        opacity: 1;
+      }
+
+      /* .chip {
+        display: inline-block;
+        padding: 6px 12px;
+        margin: 4px;
+        border-radius: 16px;
+        background: #ddd;
+        cursor: pointer;
+        user-select: none;
+      }
+      .chip.active {
+        background: #4285f4;
+        color: white;
+      } */
+
+      /* Dropzone */
+      #dropZone {
+        border: 2px dashed rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+
+      #dropZone.dragover {
+        border-color: var(--accent);
+        background: rgba(59, 130, 246, 0.1);
+        opacity: 1;
+      }
+
+      .small {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-top: 6px;
+      }
+
+      .sort-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .sort-row button {
+        flex: 1;
+        padding: 4px 6px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: var(--card-bg);
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+
+      .sort-row button.active {
+        background: var(--accent);
+        color: white;
+      }
+
+      /* PDF viewer (double page) */
+      .pdf-viewer {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        max-width: 100%;
+        max-height: 70vh;
+      }
+
+      .pdf-viewer canvas {
+        background: #111827;
+        border-radius: 6px;
+      }
+
+      /* Bande de miniatures */
+      .viewer-nav {
+        margin-top: 8px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #f9fafb;
+      }
+
+      .viewer-nav button {
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: none;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+      }
+
+      .viewer-thumbs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 4px;
+        flex: 1;
+      }
+
+      .viewer-thumb {
+        flex: 0 0 auto;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        background: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        cursor: pointer;
+        opacity: 0.7;
+        box-sizing: border-box;
+      }
+
+      .viewer-thumb img {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        object-fit: cover;
+      }
+
+      .viewer-thumb.active {
+        border: 2px solid var(--accent);
+        opacity: 1;
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="control-group">
+          <label>Choisir un dossier</label>
+          <input
+            type="file"
+            id="dirPicker"
+            webkitdirectory
+            directory
+            multiple
+            style="width: 100%"
+          />
+          <div class="small" id="dirStatus"></div>
+        </div>
+
+        <h2>⚙️ Options</h2>
+
+        <div class="control-group">
+          <label>Mode</label>
+          <button id="themeToggle" class="toggle">🌞 / 🌙</button>
+        </div>
+
+        <div class="control-group">
+          <label>Tri</label>
+          <select id="sortSelect">
+            <option value="name">Nom</option>
+            <option value="date" selected>Date</option>
+            <option value="size">Taille</option>
+            <option value="type">Type</option>
+          </select>
+          <div class="sort-row">
+            <button id="orderAsc">⬆️ Asc</button>
+            <button id="orderDesc" class="active">⬇️ Desc</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Filtre</label>
+          <div class="filter-row">
+            <div class="chip active" data-filter="all">Tout</div>
+            <div class="chip" data-filter="image">Images</div>
+            <div class="chip" data-filter="video">Vidéos</div>
+            <div class="chip" data-filter="audio">Audio</div>
+            <div class="chip" data-type="pdf">PDF</div>
+            <div class="chip" data-filter="other">Autres</div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Drag & drop</label>
+          <div id="dropZone">
+            Dépose des fichiers ici<br />
+            <span class="small"
+              >(ils seront copiés dans ton dossier Downloads)</span
+            >
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <h1>📁 Portfolio – Downloads</h1>
+        <div class="grid" id="grid"></div>
+      </main>
+    </div>
+
+    <!-- Viewer plein écran -->
+    <div id="viewer">
+      <div id="viewerContent"></div>
+    </div>
+
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
+    </script> -->
+    <!-- <script src="/static/pdfjs/pdf.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/static/pdfjs/pdf.worker.js";
+    </script> -->
+
+    <!-- PDF.js -->
+    <!-- PDF.js version stable (global pdfjsLib OK) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <script>
+      const pdfjsLib = window.pdfjsLib; // cette fois il existe pour de vrai !
+
+      console.log("pdfjsLib =", pdfjsLib); // doit afficher un OBJECT
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+    </script>
+
+    <script>
+      // ---------- PDF.js CONFIG ----------
+      //   const pdfjsLib = window["pdfjs-dist/build/pdf"];
+      //   if (pdfjsLib) {
+      //     pdfjsLib.GlobalWorkerOptions.workerSrc =
+      //       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
+      //   }
+
+      // ---------- FAVICON EMOJI ----------
+      const faviconEl = document.getElementById("favicon");
+
+      function emojiToFavicon(emoji) {
+        return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="0.9em" font-size="90">${emoji}</text></svg>`;
+      }
+
+      function setFaviconForType(type) {
+        let emoji = "📁";
+        if (!type) emoji = "📁";
+        else if (type === "image") emoji = "🖼️";
+        else if (type === "video") emoji = "🎬";
+        else if (type === "audio") emoji = "🎵";
+        else if (type === "pdf") emoji = "📕";
+        else emoji = "📄";
+        faviconEl.href = emojiToFavicon(emoji);
+      }
+
+      // ---------- THEME ----------
+      const body = document.body;
+      const themeToggle = document.getElementById("themeToggle");
+
+      function applyStoredTheme() {
+        const stored = localStorage.getItem("theme") || "light";
+        if (stored === "dark") {
+          body.classList.add("dark");
+        } else {
+          body.classList.remove("dark");
+        }
+      }
+
+      themeToggle.addEventListener("click", () => {
+        body.classList.toggle("dark");
+        localStorage.setItem(
+          "theme",
+          body.classList.contains("dark") ? "dark" : "light"
+        );
+      });
+
+      applyStoredTheme();
+
+      // ---------- DATA & STATE ----------
+      let allFiles = [];
+      let currentFilesView = [];
+      let filterType = "all";
+      let sortKey = "name";
+      let sortOrder = "asc";
+      let currentOpen = null; // nom du fichier actuellement ouvert
+      let currentOpenType = null; // image / video / audio / pdf / other
+      let currentIndex = -1; // index dans currentFilesView
+
+      const grid = document.getElementById("grid");
+      const viewer = document.getElementById("viewer");
+      const viewerContent = document.getElementById("viewerContent");
+
+      // PDF state
+      let pdfDoc = null;
+      let pdfCurrentPage = 1; // page de gauche (always odd)
+      const pdfScale = 1.2;
+
+      // ---------- FETCH FILES ----------
+      async function loadFiles() {
+        const res = await fetch("/list");
+        allFiles = (await res.json()).map((f) => {
+          if (f.name.toLowerCase().endsWith(".pdf")) f.type = "pdf";
+          return f;
+        });
+        renderGrid();
+      }
+
+      // ---------- TRI & FILTRE ----------
+      function getFilteredSortedFiles() {
+        let files = [...allFiles];
+
+        if (filterType !== "all") {
+          files = files.filter((f) => f.type === filterType);
+        }
+
+        files.sort((a, b) => {
+          let va, vb;
+          switch (sortKey) {
+            case "date":
+              va = a.mtime;
+              vb = b.mtime;
+              break;
+            case "size":
+              va = a.size;
+              vb = b.size;
+              break;
+            case "type":
+              va = a.type;
+              vb = b.type;
+              break;
+            default:
+              va = a.name.toLowerCase();
+              vb = b.name.toLowerCase();
+          }
+
+          if (va < vb) return sortOrder === "asc" ? -1 : 1;
+          if (va > vb) return sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+
+        return files;
+      }
+
+      // ---------- RENDER GRID ----------
+      function renderGrid() {
+        grid.innerHTML = "";
+        const files = getFilteredSortedFiles();
+        currentFilesView = files;
+
+        files.forEach((file, index) => {
+          const url = "/file/" + encodeURIComponent(file.name);
+          const div = document.createElement("div");
+          div.className = "item";
+          div.dataset.name = file.name;
+          div.dataset.type = file.type;
+          div.dataset.index = index;
+
+          const isPdf = file.name.toLowerCase().endsWith(".pdf");
+
+          let content = "";
+          let badge = "";
+
+          if (file.type === "image") {
+            badge = "IMG";
+            content = `<img src="${url}" alt="">`;
+          } else if (file.type === "video") {
+            badge = "VID";
+            content = `<video src="${url}" muted preload="metadata"></video>`;
+          } else if (file.type === "audio") {
+            badge = "AUD";
+            content = `
+                      <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                        🎵
+                      </div>`;
+          } else if (isPdf) {
+            badge = "PDF";
+            content = `
+                      <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                        📕
+                      </div>`;
+          } else {
+            badge = "FILE";
+            content = `
+                      <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                        📄
+                      </div>`;
+          }
+
+          div.innerHTML = `
+                    <span class="badge">${badge}</span>
+                    ${content}
+                    <div class="item-label">${file.name}</div>
+                `;
+
+          // Hover vidéo -> play / stop
+          if (file.type === "video") {
+            const vid = div.querySelector("video");
+            div.addEventListener("mouseenter", () => {
+              vid.currentTime = 0;
+              vid.play().catch(() => {});
+            });
+            div.addEventListener("mouseleave", () => {
+              vid.pause();
+            });
+          }
+
+          // Clic -> ouvrir viewer sur cet index
+          div.addEventListener("click", () => {
+            const idx = parseInt(div.dataset.index, 10);
+            openViewerByIndex(idx);
+          });
+
+          grid.appendChild(div);
+        });
+      }
+
+      // ---------- VIEWER ----------
+      function isViewerOpen() {
+        return viewer.style.display === "flex";
+      }
+
+      function closeViewer() {
+        viewer.style.display = "none";
+        viewerContent.innerHTML = "";
+        currentOpen = null;
+        currentOpenType = null;
+        pdfDoc = null;
+        setFaviconForType(null);
+      }
+
+      viewer.addEventListener("click", (e) => {
+        if (e.target === viewer) {
+          closeViewer();
+        }
+      });
+
+      viewerContent.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+
+      function openViewerByIndex(index) {
+        const files = getFilteredSortedFiles();
+        currentFilesView = files;
+        if (index < 0 || index >= files.length) return;
+        currentIndex = index;
+        const file = files[index];
+        openViewer(file);
+      }
+
+      function openPrevFile() {
+        if (!currentFilesView.length) return;
+        const newIndex =
+          (currentIndex - 1 + currentFilesView.length) %
+          currentFilesView.length;
+        openViewerByIndex(newIndex);
+      }
+
+      function openNextFile() {
+        if (!currentFilesView.length) return;
+        const newIndex = (currentIndex + 1) % currentFilesView.length;
+        openViewerByIndex(newIndex);
+      }
+
+      function buildThumbnailsBar() {
+        const thumbsContainer = document.getElementById("viewerThumbs");
+        if (!thumbsContainer) return;
+        thumbsContainer.innerHTML = "";
+
+        currentFilesView.forEach((file, idx) => {
+          const isPdf = file.name.toLowerCase().endsWith(".pdf");
+          const url = "/file/" + encodeURIComponent(file.name);
+
+          const thumb = document.createElement("div");
+          thumb.className = "viewer-thumb";
+          if (idx === currentIndex) thumb.classList.add("active");
+
+          if (file.type === "image") {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = file.name;
+            thumb.appendChild(img);
+          } else if (file.type === "video") {
+            thumb.textContent = "🎬";
+          } else if (file.type === "audio") {
+            thumb.textContent = "🎵";
+          } else if (isPdf) {
+            thumb.textContent = "📕";
+          } else {
+            thumb.textContent = "📦";
+          }
+
+          thumb.addEventListener("click", () => {
+            openViewerByIndex(idx);
+          });
+
+          thumbsContainer.appendChild(thumb);
+        });
+      }
+
+      function openViewer(file) {
+        const url = "/file/" + encodeURIComponent(file.name);
+        currentOpen = file.name;
+
+        const isPdf = file.name.toLowerCase().endsWith(".pdf");
+        currentOpenType = isPdf ? "pdf" : file.type;
+
+        setFaviconForType(currentOpenType);
+        viewer.style.display = "flex";
+        pdfDoc = null;
+
+        console.log("currentOpenType =", currentOpenType);
+        console.log("pdfjsLib =", pdfjsLib);
+
+        if (currentOpenType === "image") {
+          viewerContent.innerHTML = `
+                    <div class="viewer-main">
+                        <img src="${url}" alt="">
+                    </div>
+                    <div class="viewer-nav">
+                        <button id="prevFileBtn">⏮️</button>
+                        <div class="viewer-thumbs" id="viewerThumbs"></div>
+                        <button id="nextFileBtn">⏭️</button>
+                    </div>
+                `;
+          attachFileNavButtons();
+          buildThumbnailsBar();
+        } else if (currentOpenType === "video") {
+          viewerContent.innerHTML = `
+                    <div class="viewer-main">
+                        <video id="viewerVideo" src="${url}" style="max-width:100%;max-height:70vh;" controls></video>
+                        <div class="viewer-controls">
+                            <button id="playPauseBtn">▶️</button>
+                            <div class="viewer-progress">
+                                <input id="videoRange" type="range" min="0" max="100" step="0.1" value="0">
+                            </div>
+                            <div id="timeLabel">00:00 / 00:00</div>
+                        </div>
+                    </div>
+                    <div class="viewer-nav">
+                        <button id="prevFileBtn">⏮️</button>
+                        <div class="viewer-thumbs" id="viewerThumbs"></div>
+                        <button id="nextFileBtn">⏭️</button>
+                    </div>
+                `;
+          setupVideoControls();
+          attachFileNavButtons();
+          buildThumbnailsBar();
+        } else if (currentOpenType === "audio") {
+          viewerContent.innerHTML = `
+                    <div class="viewer-main" style="width:100%;max-width:600px;">
+                        <audio src="${url}" controls autoplay style="width:100%;"></audio>
+                    </div>
+                    <div class="viewer-nav">
+                        <button id="prevFileBtn">⏮️</button>
+                        <div class="viewer-thumbs" id="viewerThumbs"></div>
+                        <button id="nextFileBtn">⏭️</button>
+                    </div>
+                `;
+          attachFileNavButtons();
+          buildThumbnailsBar();
+        } else if (currentOpenType === "pdf" && pdfjsLib) {
+          viewerContent.innerHTML = `
+                    <div class="viewer-main">
+                        <div class="pdf-viewer">
+                            <canvas id="pdfCanvasLeft"></canvas>
+                            <canvas id="pdfCanvasRight"></canvas>
+                        </div>
+                        <div class="viewer-controls">
+                            <button id="prevPageBtn">⏮️ Pages</button>
+                            <span id="pageInfo">Pages</span>
+                            <button id="nextPageBtn">Pages ⏭️</button>
+                        </div>
+                    </div>
+                    <div class="viewer-nav">
+                        <button id="prevFileBtn">⏮️</button>
+                        <div class="viewer-thumbs" id="viewerThumbs"></div>
+                        <button id="nextFileBtn">⏭️</button>
+                    </div>
+                `;
+          attachFileNavButtons();
+          buildThumbnailsBar();
+          loadPdfDocument(url);
+        } else {
+          // Type non prévisualisé
+          viewerContent.innerHTML = `
+                    <div class="viewer-main" style="padding:20px;color:white;max-width:60vw;">
+                        <h2>📄 ${file.name}</h2>
+                        <p>Type non prévisualisé. (taille : ${(
+                          file.size / 1024
+                        ).toFixed(1)} Ko)</p>
+                    </div>
+                    <div class="viewer-nav">
+                        <button id="prevFileBtn">⏮️</button>
+                        <div class="viewer-thumbs" id="viewerThumbs"></div>
+                        <button id="nextFileBtn">⏭️</button>
+                    </div>
+                `;
+          attachFileNavButtons();
+          buildThumbnailsBar();
+        }
+      }
+
+      function attachFileNavButtons() {
+        const prevBtn = document.getElementById("prevFileBtn");
+        const nextBtn = document.getElementById("nextFileBtn");
+        if (prevBtn) prevBtn.addEventListener("click", openPrevFile);
+        if (nextBtn) nextBtn.addEventListener("click", openNextFile);
+      }
+
+      // ---------- VIDEO CONTROLS ----------
+      function setupVideoControls() {
+        const video = document.getElementById("viewerVideo");
+        const range = document.getElementById("videoRange");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const timeLabel = document.getElementById("timeLabel");
+
+        if (!video) return;
+
+        function formatTime(t) {
+          const m = Math.floor(t / 60)
+            .toString()
+            .padStart(2, "0");
+          const s = Math.floor(t % 60)
+            .toString()
+            .padStart(2, "0");
+          return `${m}:${s}`;
+        }
+
+        video.addEventListener("loadedmetadata", () => {
+          timeLabel.textContent = `00:00 / ${formatTime(video.duration)}`;
+        });
+
+        video.addEventListener("timeupdate", () => {
+          if (video.duration) {
+            const percent = (video.currentTime / video.duration) * 100;
+            range.value = percent;
+            timeLabel.textContent = `${formatTime(
+              video.currentTime
+            )} / ${formatTime(video.duration)}`;
+          }
+        });
+
+        range.addEventListener("input", () => {
+          if (video.duration) {
+            video.currentTime = video.duration * (range.value / 100);
+          }
+        });
+
+        playPauseBtn.addEventListener("click", () => {
+          if (video.paused) {
+            video.play();
+            playPauseBtn.textContent = "⏸️";
+          } else {
+            video.pause();
+            playPauseBtn.textContent = "▶️";
+          }
+        });
+
+        video
+          .play()
+          .then(() => {
+            playPauseBtn.textContent = "⏸️";
+          })
+          .catch(() => {
+            playPauseBtn.textContent = "▶️";
+          });
+      }
+
+      // ---------- PDF DOUBLE PAGE ----------
+      async function loadPdfDocument(url) {
+        try {
+          const loadingTask = pdfjsLib.getDocument(url);
+          pdfDoc = await loadingTask.promise;
+          pdfCurrentPage = 1;
+          renderPdfSpread();
+        } catch (err) {
+          console.error("Erreur PDF:", err);
+        }
+      }
+
+      function renderPdfSpread() {
+        if (!pdfDoc) return;
+        const leftCanvas = document.getElementById("pdfCanvasLeft");
+        const rightCanvas = document.getElementById("pdfCanvasRight");
+        if (!leftCanvas || !rightCanvas) return;
+
+        const leftCtx = leftCanvas.getContext("2d");
+        const rightCtx = rightCanvas.getContext("2d");
+
+        const leftPageNum = pdfCurrentPage;
+        const rightPageNum = pdfCurrentPage + 1;
+
+        pdfDoc.getPage(leftPageNum).then((pageLeft) => {
+          const viewportLeft = pageLeft.getViewport({ scale: pdfScale });
+          leftCanvas.width = viewportLeft.width;
+          leftCanvas.height = viewportLeft.height;
+          leftCtx.clearRect(0, 0, leftCanvas.width, leftCanvas.height);
+          const renderContextLeft = {
+            canvasContext: leftCtx,
+            viewport: viewportLeft,
+          };
+          pageLeft.render(renderContextLeft);
+        });
+
+        if (rightPageNum <= pdfDoc.numPages) {
+          pdfDoc.getPage(rightPageNum).then((pageRight) => {
+            const viewportRight = pageRight.getViewport({ scale: pdfScale });
+            rightCanvas.width = viewportRight.width;
+            rightCanvas.height = viewportRight.height;
+            rightCtx.clearRect(0, 0, rightCanvas.width, rightCanvas.height);
+            const renderContextRight = {
+              canvasContext: rightCtx,
+              viewport: viewportRight,
+            };
+            pageRight.render(renderContextRight);
+          });
+        } else {
+          // Pas de page droite
+          rightCanvas.width = leftCanvas.width;
+          rightCanvas.height = leftCanvas.height;
+          rightCtx.clearRect(0, 0, rightCanvas.width, rightCanvas.height);
+        }
+
+        updatePdfPageInfo();
+
+        const prevPageBtn = document.getElementById("prevPageBtn");
+        const nextPageBtn = document.getElementById("nextPageBtn");
+        if (prevPageBtn && !prevPageBtn._attached) {
+          prevPageBtn._attached = true;
+          prevPageBtn.addEventListener("click", () => {
+            if (!pdfDoc) return;
+            if (pdfCurrentPage > 1) {
+              pdfCurrentPage = Math.max(1, pdfCurrentPage - 2);
+              renderPdfSpread();
+            }
+          });
+        }
+        if (nextPageBtn && !nextPageBtn._attached) {
+          nextPageBtn._attached = true;
+          nextPageBtn.addEventListener("click", () => {
+            if (!pdfDoc) return;
+            if (pdfCurrentPage + 1 < pdfDoc.numPages) {
+              pdfCurrentPage = pdfCurrentPage + 2;
+              if (pdfCurrentPage > pdfDoc.numPages) {
+                pdfCurrentPage = pdfDoc.numPages;
+              }
+              renderPdfSpread();
+            }
+          });
+        }
+      }
+
+      function updatePdfPageInfo() {
+        const pageInfo = document.getElementById("pageInfo");
+        if (!pageInfo || !pdfDoc) return;
+        const left = pdfCurrentPage;
+        const right = Math.min(pdfCurrentPage + 1, pdfDoc.numPages);
+        if (left === right) {
+          pageInfo.textContent = `Page ${left} / ${pdfDoc.numPages}`;
+        } else {
+          pageInfo.textContent = `Pages ${left}–${right} / ${pdfDoc.numPages}`;
+        }
+      }
+
+      // ---------- FILTRES UI ----------
+      const chips = document.querySelectorAll(".chip");
+      chips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          chips.forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          filterType = chip.dataset.filter;
+          renderGrid();
+        });
+      });
+
+      const sortSelect = document.getElementById("sortSelect");
+      const orderAsc = document.getElementById("orderAsc");
+      const orderDesc = document.getElementById("orderDesc");
+
+      sortSelect.addEventListener("change", () => {
+        sortKey = sortSelect.value;
+        renderGrid();
+      });
+
+      orderAsc.addEventListener("click", () => {
+        sortOrder = "asc";
+        orderAsc.classList.add("active");
+        orderDesc.classList.remove("active");
+        renderGrid();
+      });
+
+      orderDesc.addEventListener("click", () => {
+        sortOrder = "desc";
+        orderAsc.classList.remove("active");
+        orderDesc.classList.add("active");
+        renderGrid();
+      });
+
+      // ---------- DRAG & DROP UPLOAD ----------
+      const dropZone = document.getElementById("dropZone");
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        document.addEventListener(eventName, preventDefaults, false);
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(
+          eventName,
+          () => dropZone.classList.add("dragover"),
+          false
+        );
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(
+          eventName,
+          () => dropZone.classList.remove("dragover"),
+          false
+        );
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (!files || files.length === 0) return;
+
+        [...files].forEach(uploadFile);
+      });
+
+      async function uploadFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        await fetch("/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        await loadFiles();
+      }
+
+      // ---------- DIRECTORY PICKER ----------
+      const dirPicker = document.getElementById("dirPicker");
+      const dirStatus = document.getElementById("dirStatus");
+
+      dirPicker.addEventListener("change", async (e) => {
+        const files = [...e.target.files];
+        if (!files.length) return;
+
+        const path = files[0].webkitRelativePath.split("/")[0];
+
+        const res = await fetch("/setdir", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          dirStatus.textContent = `✅ Dossier choisi : ${data.path}`;
+          dirStatus.style.color = "green";
+          await loadFiles();
+        } else {
+          dirStatus.textContent = `❌ Erreur : ${data.error}`;
+          dirStatus.style.color = "red";
+        }
+      });
+
+      // ---------- NAVIGATION CLAVIER ----------
+      document.addEventListener("keydown", (e) => {
+        if (!isViewerOpen()) return;
+
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          openNextFile();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          openPrevFile();
+        } else if (currentOpenType === "pdf" && pdfDoc) {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (pdfCurrentPage + 1 < pdfDoc.numPages) {
+              pdfCurrentPage = pdfCurrentPage + 2;
+              renderPdfSpread();
+            }
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (pdfCurrentPage > 1) {
+              pdfCurrentPage = Math.max(1, pdfCurrentPage - 2);
+              renderPdfSpread();
+            }
+          }
+        } else if (e.key === "Escape") {
+          closeViewer();
+        }
+      });
+
+      // ---------- INIT ----------
+      loadFiles();
+
+      async function openPDFDoublePage(url) {
+        const pdf = await pdfjsLib.getDocument(url).promise;
+
+        let currentPage = 1;
+
+        const render = async () => {
+          viewerContent.innerHTML = ""; // clear
+
+          const leftPageNum = currentPage;
+          const rightPageNum = currentPage + 1;
+
+          const pages = [];
+
+          for (let pageNum of [leftPageNum, rightPageNum]) {
+            if (pageNum > pdf.numPages) break;
+
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.2 });
+
+            const canvas = document.createElement("canvas");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            const ctx = canvas.getContext("2d");
+
+            await page.render({
+              canvasContext: ctx,
+              viewport: viewport,
+            }).promise;
+
+            pages.push(canvas);
+          }
+
+          const container = document.createElement("div");
+          container.style.display = "flex";
+          container.style.gap = "20px";
+          container.style.justifyContent = "center";
+          container.append(...pages);
+
+          viewerContent.appendChild(container);
+
+          updateThumbnailHighlight();
+        };
+
+        render();
+
+        // Navigation PDF
+        viewer.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight") {
+            if (currentPage + 2 <= pdf.numPages) {
+              currentPage += 2;
+              render();
+            }
+          }
+          if (e.key === "ArrowLeft") {
+            if (currentPage - 2 >= 1) {
+              currentPage -= 2;
+              render();
+            }
+          }
+        });
+
+        // Flèches UI
+        document.getElementById("btnNext").onclick = () => {
+          if (currentPage + 2 <= pdf.numPages) {
+            currentPage += 2;
+            render();
+          }
+        };
+        document.getElementById("btnPrev").onclick = () => {
+          if (currentPage - 2 >= 1) {
+            currentPage -= 2;
+            render();
+          }
+        };
+      }
+    </script>
+  </body>
+</html>
