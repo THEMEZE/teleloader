@@ -12,6 +12,8 @@ __pycache__/
 
 # Dossiers de téléchargements
 Downloads/
+Downloads_test/
+*/
 Historic/
 venv/
 .ipynb_checkpoints/
