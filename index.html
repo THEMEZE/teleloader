@@ -396,7 +396,7 @@
           <label>Tri</label>
           <select id="sortSelect">
             <option value="name">Nom</option>
-            <option value="date" selected>Date</option>
+            <option value="date" selected class="active">Date</option>
             <option value="size">Taille</option>
             <option value="type">Type</option>
           </select>
@@ -413,7 +413,8 @@
             <div class="chip" data-filter="image">Images</div>
             <div class="chip" data-filter="video">Vidéos</div>
             <div class="chip" data-filter="audio">Audio</div>
-            <div class="chip" data-type="pdf">PDF</div>
+            <!--<div class="chip" data-type="pdf">PDF</div>-->
+            <div class="chip" data-filter="pdf">PDF</div>
             <div class="chip" data-filter="other">Autres</div>
           </div>
         </div>
@@ -481,11 +482,13 @@
       function setFaviconForType(type) {
         let emoji = "📁";
         if (!type) emoji = "📁";
+        else if (type === "all") emoji = "📁";
         else if (type === "image") emoji = "🖼️";
         else if (type === "video") emoji = "🎬";
         else if (type === "audio") emoji = "🎵";
         else if (type === "pdf") emoji = "📕";
-        else emoji = "📄";
+        else if (type === "other") emoji = "📦"
+        // else emoji = "📦"
         faviconEl.href = emojiToFavicon(emoji);
       }
 
@@ -599,28 +602,42 @@
           if (file.type === "image") {
             badge = "IMG";
             content = `<img src="${url}" alt="">`;
+            setFaviconForType(file.type);
           } else if (file.type === "video") {
             badge = "VID";
             content = `<video src="${url}" muted preload="metadata"></video>`;
+            setFaviconForType(file.type);
           } else if (file.type === "audio") {
             badge = "AUD";
             content = `
                       <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
                         🎵
                       </div>`;
+            setFaviconForType(file.type);
           } else if (isPdf) {
             badge = "PDF";
             content = `
                       <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
                         📕
                       </div>`;
-          } else {
+            setFaviconForType(file.type);
+          } else if (file.type === "other") {
+              badge = "FILE";
+              content = `
+                        <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+                            📄 📦
+                        </div>`;
+              setFaviconForType(file.type);
+            }else {
             badge = "FILE";
             content = `
                       <div style="height:160px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
-                        📄
+                        📄 📦
                       </div>`;
+            setFaviconForType("all");
           }
+          
+          
 
           div.innerHTML = `
                     <span class="badge">${badge}</span>
@@ -697,41 +714,76 @@
         openViewerByIndex(newIndex);
       }
 
-      function buildThumbnailsBar() {
-        const thumbsContainer = document.getElementById("viewerThumbs");
-        if (!thumbsContainer) return;
-        thumbsContainer.innerHTML = "";
+      
+        
+    function buildThumbnailsBar() {
+          const thumbsContainer = document.getElementById("viewerThumbs");
+          if (!thumbsContainer) return;
+          thumbsContainer.innerHTML = "";
 
-        currentFilesView.forEach((file, idx) => {
-          const isPdf = file.name.toLowerCase().endsWith(".pdf");
-          const url = "/file/" + encodeURIComponent(file.name);
+          currentFilesView.forEach((file, idx) => {
+            const isPdf = file.name.toLowerCase().endsWith(".pdf");
+            const url = "/file/" + encodeURIComponent(file.name);
 
-          const thumb = document.createElement("div");
-          thumb.className = "viewer-thumb";
-          if (idx === currentIndex) thumb.classList.add("active");
+            const thumb = document.createElement("div");
+            thumb.className = "viewer-thumb";
+            if (idx === currentIndex) thumb.classList.add("active");
 
-          if (file.type === "image") {
-            const img = document.createElement("img");
-            img.src = url;
-            img.alt = file.name;
-            thumb.appendChild(img);
-          } else if (file.type === "video") {
-            thumb.textContent = "🎬";
-          } else if (file.type === "audio") {
-            thumb.textContent = "🎵";
-          } else if (isPdf) {
-            thumb.textContent = "📕";
-          } else {
-            thumb.textContent = "📦";
-          }
+            if (file.type === "image") {
+              const img = document.createElement("img");
+              img.src = url;
+              img.alt = file.name;
+              thumb.appendChild(img);
 
-          thumb.addEventListener("click", () => {
-            openViewerByIndex(idx);
+            } else if (file.type === "video") {
+              const vid = document.createElement("video");
+              vid.src = url;
+              vid.muted = true;
+              vid.preload = "metadata";
+              vid.playsInline = true;
+              vid.controls = false;
+
+              vid.title = file.name;
+              vid.setAttribute("aria-label", file.name);
+
+              thumb.appendChild(vid);
+
+              // ▶ Preview vidéo au survol
+              thumb.addEventListener("mouseenter", () => {
+                try {
+                  vid.currentTime = 0;
+                  const p = vid.play();
+                  if (p && typeof p.catch === "function") {
+                    p.catch(() => {});
+                  }
+                } catch (_) {}
+              });
+
+              thumb.addEventListener("mouseleave", () => {
+                try {
+                  vid.pause();
+                  vid.currentTime = 0;
+                } catch (_) {}
+              });
+
+            } else if (file.type === "audio") {
+              thumb.textContent = "🎵";
+
+            } else if (isPdf) {
+              thumb.textContent = "📕";
+
+            } else {
+              thumb.textContent = "📄📦";
+            }
+
+            thumb.addEventListener("click", () => {
+              openViewerByIndex(idx);
+            });
+
+            thumbsContainer.appendChild(thumb);
           });
+        }
 
-          thumbsContainer.appendChild(thumb);
-        });
-      }
 
       function openViewer(file) {
         const url = "/file/" + encodeURIComponent(file.name);
@@ -746,7 +798,8 @@
 
         console.log("currentOpenType =", currentOpenType);
         console.log("pdfjsLib =", pdfjsLib);
-
+        
+        
         if (currentOpenType === "image") {
           viewerContent.innerHTML = `
                     <div class="viewer-main">

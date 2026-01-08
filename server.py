@@ -5,7 +5,7 @@ import time
 app = Flask(__name__, static_url_path='/static')
 
 # -------------------- CONFIG --------------------
-DEFAULT_DIR = os.path.expanduser("./Downloads")
+DEFAULT_DIR = os.path.expanduser("./Downloads_test")
 DOWNLOADS_DIR = DEFAULT_DIR  # dossier actif
 CACHE_TTL = 5  # secondes
 
@@ -63,7 +63,64 @@ def scan_files():
 
     FILE_CACHE["data"] = items
     FILE_CACHE["mtime"] = now
+    
     return items
+    
+import os
+import time
+import unicodedata
+
+def scan_files():
+    """Scanne le dossier actif et met en cache le résultat."""
+    now = time.time()
+    if FILE_CACHE["data"] is not None and now - FILE_CACHE["mtime"] < CACHE_TTL:
+        return FILE_CACHE["data"]
+
+    items = []
+
+    try:
+        with os.scandir(DOWNLOADS_DIR) as it:
+            for entry in it:
+                name = entry.name
+
+                if name.startswith(".") or name.startswith("._"):
+                    continue
+
+                # Normalisation Unicode macOS
+                name = unicodedata.normalize("NFD", name)
+
+                try:
+                    if entry.is_file():
+                        stat = entry.stat()
+                        items.append({
+                            "name": name,
+                            "size": stat.st_size,
+                            "mtime": stat.st_mtime,
+                            "type": detect_type(name),
+                        })
+
+                    elif entry.is_dir():
+                        stat = entry.stat()
+                        items.append({
+                            "name": name,
+                            "size": 0,
+                            "mtime": stat.st_mtime,
+                            "type": "folder",
+                        })
+
+                except FileNotFoundError:
+                    continue
+                except OSError:
+                    continue
+
+    except FileNotFoundError:
+        items = []
+
+    FILE_CACHE["data"] = items
+    FILE_CACHE["mtime"] = now
+    print ("🔴🔴🔴🔴🔴",  items  )
+    return items
+
 
 
 # -------------------- ROUTES --------------------

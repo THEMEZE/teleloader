@@ -46,7 +46,7 @@
 
   <h1>🎵 Mini Media Player 🎬</h1>
 
-  <input type="file" id="fileInput" accept=".mp3,.ogg,.wav,.mp4,.webm,.mov,.mkv" />
+  <input type="file" id="fileInput" accept=".mp3,.ogg,.wav,.mp4,.webm,.mov,.mkv,.avi,.rar" />
 
   <br><br>
 
@@ -79,7 +79,7 @@
       if (!file) return;
 
       const url = URL.createObjectURL(file);
-      if (/\.(mp4|webm|mov|mkv)$/i.test(file.name)) {
+      if (/\.(mp4|webm|mov|mkv|avi|rar)$/i.test(file.name)) {
         // Vidéo
         audio.hidden = true;
         audio.pause();

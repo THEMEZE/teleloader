@@ -93,6 +93,7 @@ import argparse
 import subprocess
 import sys
 import os
+import shlex
 
 DOWNLOAD_DIR = "./Downloads"
 
@@ -159,6 +160,9 @@ def telecharger(url, mode, overwrite=False):
         print(f"🔴 Exception pour {url} : {e}")
         return False
 
+def clean_url(u: str) -> str:
+    return u.strip().strip("'").strip('"')
+
 
 def main():
     parser = argparse.ArgumentParser(description="Télécharge des vidéos ou audios Youtube")
@@ -181,8 +185,14 @@ def main():
     print("\n=== Résumé ===")
     if urls_fail:
         print("🔴 URLs non téléchargées :")
+        rerun = ["python", "downloader.py", "mp4"]
         for u in urls_fail:
-            print("   -", u)
+            cu = clean_url(u)
+            print("   -", cu)
+            rerun.append(cu)
+
+        cmd = " ".join(shlex.quote(arg) for arg in rerun)
+        print("Si tu veux réessayer : ▶️ ", cmd)
     else:
         print("🟢 Tout téléchargé avec succès !")
 
